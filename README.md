@@ -1,5 +1,9 @@
 # Weft
 
+[![tests](https://github.com/NarenDawar/weft/actions/workflows/test.yml/badge.svg)](https://github.com/NarenDawar/weft/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+
 **A time-travel debugger for AI agents — git for agent execution.**
 
 Agent runs are stochastic and multi-step, and today's tools show you a trace
