@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from loom.types import Decision
+from weft.types import Decision
 
 
 class FakeModelClient:

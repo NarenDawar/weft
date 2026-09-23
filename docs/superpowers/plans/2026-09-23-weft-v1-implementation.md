@@ -1,24 +1,24 @@
-# Loom v1 Implementation Plan
+# Weft v1 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build Loom v1 — a Python library and local tool that records every model decision and tool call in a tool-calling agent loop, then supports deterministic replay, branching a new run from any recorded step, diffing two runs to find where they diverged, and browsing all of this through a local web UI.
+**Goal:** Build Weft v1 — a Python library and local tool that records every model decision and tool call in a tool-calling agent loop, then supports deterministic replay, branching a new run from any recorded step, diffing two runs to find where they diverged, and browsing all of this through a local web UI.
 
 **Architecture:** Three client-side modes (Recording, Replay, Branch) all implement the same `ModelClient`/tool-execution interfaces a user's agent loop already depends on, so no control-flow changes are needed to switch between them. A SQLite storage layer holds two tables (`runs`, `steps`); a branched run stores only its own new steps and reconstructs full history by walking the fork chain. A diff algorithm and a stdlib-only local web server sit on top of the same storage layer.
 
 **Tech Stack:** Python 3.10+, stdlib only for the core (`sqlite3`, `http.server`, `json`, `secrets`), `pytest` for tests. Zero third-party runtime dependencies.
 
-**Spec:** `docs/superpowers/specs/2026-09-23-loom-agent-time-travel-debugger-design.md`
+**Spec:** `docs/superpowers/specs/2026-09-23-weft-agent-time-travel-debugger-design.md`
 
 ## Global Constraints
 
-- Core package (`loom/`) has zero required third-party dependencies — stdlib only (`sqlite3`, `http.server`, `json`, `secrets`, `datetime`).
+- Core package (`weft/`) has zero required third-party dependencies — stdlib only (`sqlite3`, `http.server`, `json`, `secrets`, `datetime`).
 - Python 3.10+ syntax throughout (`from __future__ import annotations`).
 - Storage is a single SQLite file per project; hand-written schema and queries, no ORM.
 - A branched run stores only its own new steps (never copies a parent's steps). Full history is reconstructed by walking the fork chain, recursively for multi-level branches.
 - Replay past the end of a recording raises `ReplayExhaustedError` unless the run's `status` is `"complete"`, in which case it returns `Decision(tool_name=None)` — these are semantically different signals (an unexpected mismatch vs. genuine completion) and must never be conflated.
-- `loom/web/` uses Python's stdlib `http.server` only — no web framework dependency.
-- `pyproject.toml`'s package include list must ship only `loom*` — never `examples*` (they're demo code, not library code users install).
+- `weft/web/` uses Python's stdlib `http.server` only — no web framework dependency.
+- `pyproject.toml`'s package include list must ship only `weft*` — never `examples*` (they're demo code, not library code users install).
 
 ## Review Focus
 
@@ -34,7 +34,7 @@
 
 ```
 pyproject.toml
-loom/
+weft/
   __init__.py
   types.py
   registry.py
@@ -76,20 +76,20 @@ tests/
 
 **Files:**
 - Create: `pyproject.toml`
-- Create: `loom/__init__.py`
-- Create: `loom/types.py`
-- Create: `loom/registry.py`
+- Create: `weft/__init__.py`
+- Create: `weft/types.py`
+- Create: `weft/registry.py`
 - Test: `tests/test_registry.py`
 
 **Interfaces:**
-- Produces: `Step(tool_name: str, args: dict)`, `Observation(result: Any, is_error: bool = False)`, `HistoryEntry(step: Step, observation: Observation)`, `Decision(tool_name: str | None, args: dict = {})`, `Tool(name: str, description: str, parameters: dict, fn: Callable)` — all frozen dataclasses in `loom/types.py`.
-- Produces: `ToolRegistry(tools: list[Tool])` with `.tools() -> list[Tool]`, `.get(name) -> Tool` (raises `UnknownToolError`); `UnknownToolError` exception, in `loom/registry.py`.
+- Produces: `Step(tool_name: str, args: dict)`, `Observation(result: Any, is_error: bool = False)`, `HistoryEntry(step: Step, observation: Observation)`, `Decision(tool_name: str | None, args: dict = {})`, `Tool(name: str, description: str, parameters: dict, fn: Callable)` — all frozen dataclasses in `weft/types.py`.
+- Produces: `ToolRegistry(tools: list[Tool])` with `.tools() -> list[Tool]`, `.get(name) -> Tool` (raises `UnknownToolError`); `UnknownToolError` exception, in `weft/registry.py`.
 
 - [ ] **Step 1: Write `pyproject.toml`**
 
 ```toml
 [project]
-name = "loom-agent-debugger"
+name = "weft-agent-debugger"
 version = "0.1.0"
 description = "Time-travel debugger for tool-calling agents: record, replay, branch, and diff agent runs"
 requires-python = ">=3.10"
@@ -103,7 +103,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["loom*"]
+include = ["weft*"]
 ```
 
 - [ ] **Step 2: Install the package in editable/dev mode**
@@ -116,8 +116,8 @@ Run: `pip install -e ".[dev]"`
 # tests/test_registry.py
 from __future__ import annotations
 import pytest
-from loom.registry import ToolRegistry, UnknownToolError
-from loom.types import Tool
+from weft.registry import ToolRegistry, UnknownToolError
+from weft.types import Tool
 
 
 def make_registry():
@@ -150,15 +150,15 @@ def test_tools_returns_all_registered_tools():
 - [ ] **Step 4: Run tests to verify they fail**
 
 Run: `pytest tests/test_registry.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.registry'` (or similar import errors)
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.registry'` (or similar import errors)
 
-- [ ] **Step 5: Write `loom/__init__.py`**
+- [ ] **Step 5: Write `weft/__init__.py`**
 
 ```python
-"""Loom: a time-travel debugger for tool-calling agents."""
+"""Weft: a time-travel debugger for tool-calling agents."""
 ```
 
-- [ ] **Step 6: Write `loom/types.py`**
+- [ ] **Step 6: Write `weft/types.py`**
 
 ```python
 from __future__ import annotations
@@ -199,12 +199,12 @@ class Tool:
     fn: Callable[..., Any]
 ```
 
-- [ ] **Step 7: Write `loom/registry.py`**
+- [ ] **Step 7: Write `weft/registry.py`**
 
 ```python
 from __future__ import annotations
 
-from loom.types import Tool
+from weft.types import Tool
 
 
 class UnknownToolError(Exception):
@@ -232,7 +232,7 @@ Expected: PASS (3 tests)
 - [ ] **Step 9: Commit**
 
 ```bash
-git add pyproject.toml loom/__init__.py loom/types.py loom/registry.py tests/test_registry.py
+git add pyproject.toml weft/__init__.py weft/types.py weft/registry.py tests/test_registry.py
 git commit -m "feat: add core types and tool registry"
 ```
 
@@ -241,11 +241,11 @@ git commit -m "feat: add core types and tool registry"
 ### Task 2: SQLite storage layer with fork-chain resolution
 
 **Files:**
-- Create: `loom/storage.py`
+- Create: `weft/storage.py`
 - Test: `tests/test_storage.py`
 
 **Interfaces:**
-- Consumes: `Step`, `Observation`, `HistoryEntry` from `loom/types.py` (Task 1).
+- Consumes: `Step`, `Observation`, `HistoryEntry` from `weft/types.py` (Task 1).
 - Produces: `UnknownRunError`; `generate_run_id() -> str`; `now_iso() -> str`; `RunRecord(run_id, task, started_at, forked_from_run_id, forked_from_step, status)` (frozen dataclass); `Storage(db_path: str)` with `.create_run(task, forked_from_run_id=None, forked_from_step=None, run_id=None) -> str`, `.mark_complete(run_id)`, `.append_step(run_id, step_index, step, observation, decided_at, executed_at)`, `.get_run(run_id) -> RunRecord` (raises `UnknownRunError`), `.list_runs() -> list[RunRecord]`, `.get_own_steps(run_id) -> list[HistoryEntry]`, `.resolve_full_history(run_id) -> list[HistoryEntry]`, `.close()`. `Storage(":memory:")` is a valid in-memory database, used throughout the test suite.
 
 - [ ] **Step 1: Write the failing test**
@@ -254,8 +254,8 @@ git commit -m "feat: add core types and tool registry"
 # tests/test_storage.py
 from __future__ import annotations
 import pytest
-from loom.storage import Storage, UnknownRunError
-from loom.types import Observation, Step
+from weft.storage import Storage, UnknownRunError
+from weft.types import Observation, Step
 
 
 def make_storage() -> Storage:
@@ -334,9 +334,9 @@ def test_resolve_full_history_for_multi_level_branch():
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_storage.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.storage'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.storage'`
 
-- [ ] **Step 3: Write `loom/storage.py`**
+- [ ] **Step 3: Write `weft/storage.py`**
 
 ```python
 from __future__ import annotations
@@ -348,7 +348,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-from loom.types import HistoryEntry, Observation, Step
+from weft.types import HistoryEntry, Observation, Step
 
 
 class UnknownRunError(Exception):
@@ -516,7 +516,7 @@ Expected: PASS (6 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add loom/storage.py tests/test_storage.py
+git add weft/storage.py tests/test_storage.py
 git commit -m "feat: add SQLite storage layer with fork-chain history resolution"
 ```
 
@@ -525,14 +525,14 @@ git commit -m "feat: add SQLite storage layer with fork-chain history resolution
 ### Task 3: Model client protocol and test fakes
 
 **Files:**
-- Create: `loom/model.py`
+- Create: `weft/model.py`
 - Create: `tests/__init__.py`
 - Create: `tests/fakes.py`
 - Test: `tests/test_model.py`
 
 **Interfaces:**
-- Consumes: `Decision`, `HistoryEntry`, `Tool` from `loom/types.py` (Task 1).
-- Produces: `ModelClient` protocol with `.decide(task: str, history: list[HistoryEntry], tools: list[Tool]) -> Decision`, in `loom/model.py`.
+- Consumes: `Decision`, `HistoryEntry`, `Tool` from `weft/types.py` (Task 1).
+- Produces: `ModelClient` protocol with `.decide(task: str, history: list[HistoryEntry], tools: list[Tool]) -> Decision`, in `weft/model.py`.
 - Produces (test-only, imported by later tasks' tests): `FakeModelClient(decisions: list[Decision])` with `.decide(...)` popping decisions in order and `.calls` counter; `FailingModelClient(error: Exception)` with `.decide(...)` always raising, in `tests/fakes.py`.
 
 - [ ] **Step 1: Write the failing test**
@@ -541,7 +541,7 @@ git commit -m "feat: add SQLite storage layer with fork-chain history resolution
 # tests/test_model.py
 from __future__ import annotations
 import pytest
-from loom.types import Decision
+from weft.types import Decision
 from tests.fakes import FakeModelClient, FailingModelClient
 
 
@@ -564,14 +564,14 @@ def test_failing_model_client_raises():
 Run: `pytest tests/test_model.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'tests.fakes'`
 
-- [ ] **Step 3: Write `loom/model.py`**
+- [ ] **Step 3: Write `weft/model.py`**
 
 ```python
 from __future__ import annotations
 
 from typing import Protocol
 
-from loom.types import Decision, HistoryEntry, Tool
+from weft.types import Decision, HistoryEntry, Tool
 
 
 class ModelClient(Protocol):
@@ -588,7 +588,7 @@ class ModelClient(Protocol):
 ```python
 from __future__ import annotations
 
-from loom.types import Decision
+from weft.types import Decision
 
 
 class FakeModelClient:
@@ -619,7 +619,7 @@ Expected: PASS (2 tests)
 - [ ] **Step 7: Commit**
 
 ```bash
-git add loom/model.py tests/__init__.py tests/fakes.py tests/test_model.py
+git add weft/model.py tests/__init__.py tests/fakes.py tests/test_model.py
 git commit -m "feat: add ModelClient protocol and test fakes"
 ```
 
@@ -628,7 +628,7 @@ git commit -m "feat: add ModelClient protocol and test fakes"
 ### Task 4: Recording — RecordingModelClient, RecordingExecutor, begin_recording
 
 **Files:**
-- Create: `loom/recording.py`
+- Create: `weft/recording.py`
 - Test: `tests/test_recording.py`
 
 **Interfaces:**
@@ -640,10 +640,10 @@ git commit -m "feat: add ModelClient protocol and test fakes"
 ```python
 # tests/test_recording.py
 from __future__ import annotations
-from loom.recording import RecordingExecutor, RecordingModelClient, begin_recording
-from loom.registry import ToolRegistry
-from loom.storage import Storage
-from loom.types import Decision, Step, Tool
+from weft.recording import RecordingExecutor, RecordingModelClient, begin_recording
+from weft.registry import ToolRegistry
+from weft.storage import Storage
+from weft.types import Decision, Step, Tool
 from tests.fakes import FakeModelClient
 
 
@@ -727,17 +727,17 @@ def test_begin_recording_creates_run_and_returns_wired_clients():
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_recording.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.recording'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.recording'`
 
-- [ ] **Step 3: Write `loom/recording.py`**
+- [ ] **Step 3: Write `weft/recording.py`**
 
 ```python
 from __future__ import annotations
 
-from loom.model import ModelClient
-from loom.registry import ToolRegistry
-from loom.storage import Storage, now_iso
-from loom.types import Decision, HistoryEntry, Observation, Step
+from weft.model import ModelClient
+from weft.registry import ToolRegistry
+from weft.storage import Storage, now_iso
+from weft.types import Decision, HistoryEntry, Observation, Step
 
 
 class RecordingModelClient:
@@ -791,7 +791,7 @@ Expected: PASS (6 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add loom/recording.py tests/test_recording.py
+git add weft/recording.py tests/test_recording.py
 git commit -m "feat: add recording wrappers that log every decision and tool call"
 ```
 
@@ -800,7 +800,7 @@ git commit -m "feat: add recording wrappers that log every decision and tool cal
 ### Task 5: Replay — ReplayModelClient, ReplayExecutor
 
 **Files:**
-- Create: `loom/replay.py`
+- Create: `weft/replay.py`
 - Test: `tests/test_replay.py`
 
 **Interfaces:**
@@ -813,9 +813,9 @@ git commit -m "feat: add recording wrappers that log every decision and tool cal
 # tests/test_replay.py
 from __future__ import annotations
 import pytest
-from loom.replay import ReplayExecutor, ReplayExhaustedError, ReplayModelClient
-from loom.storage import Storage
-from loom.types import Observation, Step
+from weft.replay import ReplayExecutor, ReplayExhaustedError, ReplayModelClient
+from weft.storage import Storage
+from weft.types import Observation, Step
 
 
 def make_storage_with_run(status="complete"):
@@ -879,15 +879,15 @@ def test_replay_executor_raises_when_exhausted():
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_replay.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.replay'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.replay'`
 
-- [ ] **Step 3: Write `loom/replay.py`**
+- [ ] **Step 3: Write `weft/replay.py`**
 
 ```python
 from __future__ import annotations
 
-from loom.storage import Storage
-from loom.types import Decision, Observation, Step
+from weft.storage import Storage
+from weft.types import Decision, Observation, Step
 
 
 class ReplayExhaustedError(Exception):
@@ -939,7 +939,7 @@ Expected: PASS (5 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add loom/replay.py tests/test_replay.py
+git add weft/replay.py tests/test_replay.py
 git commit -m "feat: add deterministic replay wrappers"
 ```
 
@@ -948,7 +948,7 @@ git commit -m "feat: add deterministic replay wrappers"
 ### Task 6: Branch — the branch() factory
 
 **Files:**
-- Create: `loom/branch.py`
+- Create: `weft/branch.py`
 - Test: `tests/test_branch.py`
 
 **Interfaces:**
@@ -961,10 +961,10 @@ git commit -m "feat: add deterministic replay wrappers"
 # tests/test_branch.py
 from __future__ import annotations
 import pytest
-from loom.branch import InvalidForkPointError, branch
-from loom.registry import ToolRegistry
-from loom.storage import Storage
-from loom.types import Decision, Observation, Step, Tool
+from weft.branch import InvalidForkPointError, branch
+from weft.registry import ToolRegistry
+from weft.storage import Storage
+from weft.types import Decision, Observation, Step, Tool
 from tests.fakes import FakeModelClient
 
 
@@ -1089,21 +1089,21 @@ def test_branch_at_step_equal_to_parent_length_replays_everything_then_goes_live
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_branch.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.branch'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.branch'`
 
-- [ ] **Step 3: Write `loom/branch.py`**
+- [ ] **Step 3: Write `weft/branch.py`**
 
 ```python
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-from loom.model import ModelClient
-from loom.recording import RecordingExecutor, RecordingModelClient
-from loom.registry import ToolRegistry
-from loom.replay import ReplayExecutor, ReplayModelClient
-from loom.storage import Storage
-from loom.types import Decision, Observation, Step
+from weft.model import ModelClient
+from weft.recording import RecordingExecutor, RecordingModelClient
+from weft.registry import ToolRegistry
+from weft.replay import ReplayExecutor, ReplayModelClient
+from weft.storage import Storage
+from weft.types import Decision, Observation, Step
 
 
 class InvalidForkPointError(Exception):
@@ -1168,7 +1168,7 @@ Expected: PASS (5 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add loom/branch.py tests/test_branch.py
+git add weft/branch.py tests/test_branch.py
 git commit -m "feat: add branch() to fork a new live run from a recorded step"
 ```
 
@@ -1177,7 +1177,7 @@ git commit -m "feat: add branch() to fork a new live run from a recorded step"
 ### Task 7: Diff algorithm
 
 **Files:**
-- Create: `loom/diff.py`
+- Create: `weft/diff.py`
 - Test: `tests/test_diff.py`
 
 **Interfaces:**
@@ -1189,9 +1189,9 @@ git commit -m "feat: add branch() to fork a new live run from a recorded step"
 ```python
 # tests/test_diff.py
 from __future__ import annotations
-from loom.diff import diff_runs
-from loom.storage import Storage
-from loom.types import Observation, Step
+from weft.diff import diff_runs
+from weft.storage import Storage
+from weft.types import Observation, Step
 
 
 def make_run(storage, steps):
@@ -1246,9 +1246,9 @@ def test_diff_reports_length_difference_when_one_run_is_shorter():
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_diff.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.diff'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.diff'`
 
-- [ ] **Step 3: Write `loom/diff.py`**
+- [ ] **Step 3: Write `weft/diff.py`**
 
 ```python
 from __future__ import annotations
@@ -1256,7 +1256,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from loom.storage import Storage
+from weft.storage import Storage
 
 
 @dataclass(frozen=True)
@@ -1311,7 +1311,7 @@ Expected: PASS (4 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add loom/diff.py tests/test_diff.py
+git add weft/diff.py tests/test_diff.py
 git commit -m "feat: add run diff algorithm"
 ```
 
@@ -1320,21 +1320,21 @@ git commit -m "feat: add run diff algorithm"
 ### Task 8: CLI — list, show, diff
 
 **Files:**
-- Create: `loom/cli.py`
+- Create: `weft/cli.py`
 - Test: `tests/test_cli.py`
 
 **Interfaces:**
 - Consumes: `Storage` (Task 2), `diff_runs` (Task 7).
-- Produces: `build_parser() -> argparse.ArgumentParser`; `main(argv: list[str] | None = None) -> int` — the CLI entry point, dispatching `list`/`show`/`diff` subcommands against a `--db` SQLite path (default `.loom.db`).
+- Produces: `build_parser() -> argparse.ArgumentParser`; `main(argv: list[str] | None = None) -> int` — the CLI entry point, dispatching `list`/`show`/`diff` subcommands against a `--db` SQLite path (default `.weft.db`).
 
 - [ ] **Step 1: Write the failing test**
 
 ```python
 # tests/test_cli.py
 from __future__ import annotations
-from loom.cli import main
-from loom.storage import Storage
-from loom.types import Observation, Step
+from weft.cli import main
+from weft.storage import Storage
+from weft.types import Observation, Step
 
 
 def test_list_shows_no_runs_message_when_empty(tmp_path, capsys):
@@ -1387,9 +1387,9 @@ def test_diff_prints_divergence_point(tmp_path, capsys):
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_cli.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.cli'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.cli'`
 
-- [ ] **Step 3: Write `loom/cli.py`**
+- [ ] **Step 3: Write `weft/cli.py`**
 
 ```python
 from __future__ import annotations
@@ -1397,8 +1397,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from loom.diff import diff_runs
-from loom.storage import Storage
+from weft.diff import diff_runs
+from weft.storage import Storage
 
 
 def _open_storage(db_path: str) -> Storage:
@@ -1451,8 +1451,8 @@ def cmd_diff(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="loom", description="Time-travel debugger for agents.")
-    parser.add_argument("--db", default=".loom.db", help="Path to the Loom SQLite database (default: .loom.db)")
+    parser = argparse.ArgumentParser(prog="weft", description="Time-travel debugger for agents.")
+    parser.add_argument("--db", default=".weft.db", help="Path to the Weft SQLite database (default: .weft.db)")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     list_parser = subparsers.add_parser("list", help="List all recorded runs")
@@ -1489,21 +1489,21 @@ Expected: PASS (4 tests)
 - [ ] **Step 5: Commit**
 
 ```bash
-git add loom/cli.py tests/test_cli.py
+git add weft/cli.py tests/test_cli.py
 git commit -m "feat: add CLI (list, show, diff)"
 ```
 
 ---
 
-### Task 9: Web UI — local server and timeline view, plus `loom serve`
+### Task 9: Web UI — local server and timeline view, plus `weft serve`
 
 **Files:**
-- Create: `loom/web/__init__.py`
-- Create: `loom/web/server.py`
-- Create: `loom/web/static/index.html`
-- Create: `loom/web/static/app.js`
-- Create: `loom/web/static/style.css`
-- Modify: `loom/cli.py` (add the `serve` subcommand)
+- Create: `weft/web/__init__.py`
+- Create: `weft/web/server.py`
+- Create: `weft/web/static/index.html`
+- Create: `weft/web/static/app.js`
+- Create: `weft/web/static/style.css`
+- Modify: `weft/cli.py` (add the `serve` subcommand)
 - Test: `tests/test_web_server.py`
 
 **Interfaces:**
@@ -1519,9 +1519,9 @@ import json
 import threading
 import urllib.request
 
-from loom.storage import Storage
-from loom.types import Observation, Step
-from loom.web.server import serve
+from weft.storage import Storage
+from weft.types import Observation, Step
+from weft.web.server import serve
 
 
 def _get_json(url: str):
@@ -1601,14 +1601,14 @@ def test_index_page_is_served():
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pytest tests/test_web_server.py -v`
-Expected: FAIL with `ModuleNotFoundError: No module named 'loom.web'`
+Expected: FAIL with `ModuleNotFoundError: No module named 'weft.web'`
 
-- [ ] **Step 3: Write `loom/web/__init__.py`**
+- [ ] **Step 3: Write `weft/web/__init__.py`**
 
 ```python
 ```
 
-- [ ] **Step 4: Write `loom/web/server.py`**
+- [ ] **Step 4: Write `weft/web/server.py`**
 
 ```python
 from __future__ import annotations
@@ -1618,8 +1618,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from loom.diff import diff_runs
-from loom.storage import RunRecord, Storage
+from weft.diff import diff_runs
+from weft.storage import RunRecord, Storage
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -1711,18 +1711,18 @@ def serve(storage: Storage, host: str = "127.0.0.1", port: int = 8420) -> Thread
     return ThreadingHTTPServer((host, port), handler_cls)
 ```
 
-- [ ] **Step 5: Write `loom/web/static/index.html`**
+- [ ] **Step 5: Write `weft/web/static/index.html`**
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Loom</title>
+  <title>Weft</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <h1>Loom</h1>
+  <h1>Weft</h1>
   <div id="runs"></div>
   <div id="timeline"></div>
   <script src="/app.js"></script>
@@ -1730,7 +1730,7 @@ def serve(storage: Storage, host: str = "127.0.0.1", port: int = 8420) -> Thread
 </html>
 ```
 
-- [ ] **Step 6: Write `loom/web/static/app.js`**
+- [ ] **Step 6: Write `weft/web/static/app.js`**
 
 ```javascript
 async function loadRuns() {
@@ -1772,7 +1772,7 @@ async function loadTimeline(runId) {
 loadRuns();
 ```
 
-- [ ] **Step 7: Write `loom/web/static/style.css`**
+- [ ] **Step 7: Write `weft/web/static/style.css`**
 
 ```css
 body {
@@ -1811,12 +1811,12 @@ h1 {
 }
 ```
 
-- [ ] **Step 8: Modify `loom/cli.py`** — add the `serve` subcommand
+- [ ] **Step 8: Modify `weft/cli.py`** — add the `serve` subcommand
 
 Add this import near the top, alongside the existing imports:
 
 ```python
-from loom.web.server import serve
+from weft.web.server import serve
 ```
 
 Add this function alongside the other `cmd_*` functions:
@@ -1825,7 +1825,7 @@ Add this function alongside the other `cmd_*` functions:
 def cmd_serve(args: argparse.Namespace) -> None:
     storage = _open_storage(args.db)
     server = serve(storage, host=args.host, port=args.port)
-    print(f"Loom serving at http://{args.host}:{args.port} (Ctrl+C to stop)")
+    print(f"Weft serving at http://{args.host}:{args.port} (Ctrl+C to stop)")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -1851,8 +1851,8 @@ Expected: PASS (8 tests: 4 web server + 4 CLI, no regressions in CLI from the im
 - [ ] **Step 10: Commit**
 
 ```bash
-git add loom/web/ loom/cli.py tests/test_web_server.py
-git commit -m "feat: add local web UI (timeline, diff) and loom serve command"
+git add weft/web/ weft/cli.py tests/test_web_server.py
+git commit -m "feat: add local web UI (timeline, diff) and weft serve command"
 ```
 
 ---
@@ -1866,7 +1866,7 @@ git commit -m "feat: add local web UI (timeline, diff) and loom serve command"
 
 **Interfaces:**
 - Consumes: `Storage` (Task 2), `begin_recording` (Task 4), `ReplayModelClient`/`ReplayExecutor` (Task 5), `branch` (Task 6), `diff_runs` (Task 7), `ToolRegistry` (Task 1), `Step`/`Decision`/`Tool` (Task 1).
-- Produces: `FakeFilesystem`, `make_tools(fs) -> list[Tool]`, `ScriptedClient`, `run_demo() -> None` — a fully self-contained, runnable demonstration needing no real API key, since Loom's recording/replay/branch/diff mechanism is agnostic to whether decisions come from a real model or a script.
+- Produces: `FakeFilesystem`, `make_tools(fs) -> list[Tool]`, `ScriptedClient`, `run_demo() -> None` — a fully self-contained, runnable demonstration needing no real API key, since Weft's recording/replay/branch/diff mechanism is agnostic to whether decisions come from a real model or a script.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1903,13 +1903,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from loom.branch import branch
-from loom.diff import diff_runs
-from loom.recording import begin_recording
-from loom.registry import ToolRegistry
-from loom.replay import ReplayExecutor, ReplayModelClient
-from loom.storage import Storage
-from loom.types import Decision, Step, Tool
+from weft.branch import branch
+from weft.diff import diff_runs
+from weft.recording import begin_recording
+from weft.registry import ToolRegistry
+from weft.replay import ReplayExecutor, ReplayModelClient
+from weft.storage import Storage
+from weft.types import Decision, Step, Tool
 
 
 @dataclass
@@ -1948,7 +1948,7 @@ def make_tools(fs: FakeFilesystem) -> list[Tool]:
 
 
 class ScriptedClient:
-    """A fully scripted ModelClient standing in for a real model — Loom's
+    """A fully scripted ModelClient standing in for a real model — Weft's
     recording/replay/branch/diff mechanism doesn't care whether decisions
     come from a real API or a script, so this demo needs no API key."""
 
@@ -1960,7 +1960,7 @@ class ScriptedClient:
 
 
 def run_demo() -> None:
-    storage = Storage("demo.loom.db")
+    storage = Storage("demo.weft.db")
     fs = FakeFilesystem(files={"greet.py": "def greet():\n    return 'helo'\n"})
     registry = ToolRegistry(make_tools(fs))
     task = "fix the typo in greet.py"
@@ -2045,5 +2045,5 @@ git commit -m "feat: add end-to-end record/replay/branch/diff demo"
 
 - **Spec coverage:** core types + registry (Task 1), SQLite storage with fork-chain resolution (Task 2), the three client modes — Recording (Task 4), Replay (Task 5), Branch (Task 6) — the diff algorithm (Task 7), the CLI (Task 8), the local web UI (Task 9), and the record→replay→branch→diff example (Task 10) — every architecture component and the storage/diff/CLI/web-UI sections of the spec have an owning task.
 - **Placeholder scan:** no TBD/TODO; every step has real, runnable code.
-- **Type consistency:** `Step`, `Observation`, `HistoryEntry`, `Decision`, `Tool` are defined once in `loom/types.py` (Task 1) and used with identical field names throughout every later task; `RunRecord`/`Storage` are defined once in Task 2 and consumed as-is by Tasks 4–9.
+- **Type consistency:** `Step`, `Observation`, `HistoryEntry`, `Decision`, `Tool` are defined once in `weft/types.py` (Task 1) and used with identical field names throughout every later task; `RunRecord`/`Storage` are defined once in Task 2 and consumed as-is by Tasks 4–9.
 - **Review Focus:** all five items (multi-level branch reconstruction, replay-complete-vs-exhausted distinction, branch boundary values, tool-exception capture during recording, run-length-difference diffing) have concrete owning tests, listed above.

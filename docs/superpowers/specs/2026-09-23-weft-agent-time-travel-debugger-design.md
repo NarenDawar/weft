@@ -1,18 +1,18 @@
-# Loom: Time-Travel Debugger for Agents — Design
+# Weft: Time-Travel Debugger for Agents — Design
 
 **Status:** Approved for planning
 **Date:** 2026-09-23
 
 ## Summary
 
-Loom is a Python library and local tool that records every model decision
+Weft is a Python library and local tool that records every model decision
 and tool call a tool-calling agent makes, then lets you replay a recorded
 run deterministically (no real API calls, no real side effects), branch a
 new run from any step in a recorded run while reusing its prefix, and diff
 two runs to find exactly where their behavior diverged. It's "git for agent
 execution": agent runs are stochastic and multi-step, and existing
 observability tools show you a trace after the fact but don't let you go
-back, fork, or compare. Loom does all three.
+back, fork, or compare. Weft does all three.
 
 ## Motivation
 
@@ -22,7 +22,7 @@ differently" without re-running the whole agent from scratch against a live
 model, burning time and money, and getting a *different* non-deterministic
 run instead of an answer. You can't compare two runs of the same task to
 see exactly which decision or which tool result caused them to diverge
-without manually reading two full traces side by side. Loom makes both of
+without manually reading two full traces side by side. Weft makes both of
 these first-class operations.
 
 ## Goals
@@ -44,7 +44,7 @@ these first-class operations.
 - Framework-agnostic HTTP-level interception (recording works by wrapping a
   `ModelClient`-shaped object and tool execution, matching a specific but
   common agent-loop shape — not by proxying arbitrary network traffic).
-- Any dependency on Scry or its types. Loom defines its own minimal
+- Any dependency on Scry or its types. Weft defines its own minimal
   protocol shapes, independently, even though they resemble Scry's by
   design (a proven pattern for this domain).
 - Multi-user / hosted storage. v1 is a local SQLite file per project.
@@ -69,7 +69,7 @@ history, tools) -> Decision`) and tool execution:
   no real side effect. Advancing past the end of what was recorded is an
   error, not a silent fallback, since it means the agent's code no longer
   matches what was recorded.
-- **Branch mode**: a factory (`loom.branch(run_id, from_step=N)`) that
+- **Branch mode**: a factory (`weft.branch(run_id, from_step=N)`) that
   returns a client pair which replays steps `0..N-1` from the recording,
   then transparently switches to recording live from step `N` onward,
   writing a new run whose `forked_from_run_id`/`forked_from_step` point at
@@ -121,15 +121,15 @@ Inspection only — branching is a Python API, not a CLI command, since
 re-invoking a user's own agent loop code isn't something a generic CLI can
 do:
 
-- `loom list` — list all runs in the local `.loom.db`.
-- `loom show <run_id>` — print the step-by-step summary for one run.
-- `loom diff <run_id_a> <run_id_b>` — structural diff per the algorithm
+- `weft list` — list all runs in the local `.weft.db`.
+- `weft show <run_id>` — print the step-by-step summary for one run.
+- `weft diff <run_id_a> <run_id_b>` — structural diff per the algorithm
   above.
-- `loom serve` — starts the local web UI (see below).
+- `weft serve` — starts the local web UI (see below).
 
 ## Web UI
 
-`loom serve` starts a small local HTTP server (Python stdlib only, no web
+`weft serve` starts a small local HTTP server (Python stdlib only, no web
 framework — this is simple enough not to need one, matching Scry's
 minimal-dependency philosophy) exposing a small JSON API (`/api/runs`,
 `/api/runs/<id>`, `/api/diff/<a>/<b>`) and a static page that renders a
@@ -166,13 +166,13 @@ clients/tools, the same pattern as Scry's `tests/fakes.py`.
 ## Repository shape
 
 ```
-loom/                       core package
+weft/                       core package
   types.py                   Step, Observation, HistoryEntry, Decision
   model.py                   ModelClient protocol
   storage.py                 SQLite schema, run/step CRUD, fork-chain resolution
   recording.py                RecordingModelClient, RecordingExecutor
   replay.py                   ReplayModelClient, ReplayExecutor
-  branch.py                   loom.branch() factory
+  branch.py                   weft.branch() factory
   diff.py                     diff algorithm
   cli.py                       list / show / diff / serve
   web/

@@ -1,7 +1,7 @@
 from __future__ import annotations
-from loom.cli import main
-from loom.storage import Storage
-from loom.types import Observation, Step
+from weft.cli import main
+from weft.storage import Storage
+from weft.types import Observation, Step
 
 
 def test_list_shows_no_runs_message_when_empty(tmp_path, capsys):

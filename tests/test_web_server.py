@@ -3,9 +3,9 @@ import json
 import threading
 import urllib.request
 
-from loom.storage import Storage
-from loom.types import Observation, Step
-from loom.web.server import serve
+from weft.storage import Storage
+from weft.types import Observation, Step
+from weft.web.server import serve
 
 
 def _get_json(url: str):

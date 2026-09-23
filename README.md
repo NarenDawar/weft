@@ -1,4 +1,4 @@
-# Loom
+# Weft
 
 **A time-travel debugger for AI agents — git for agent execution.**
 
@@ -8,7 +8,7 @@ step 3 had gone differently" without burning real API calls on a fresh,
 *different* run. You can't tell exactly where two runs of the same task
 diverged without reading two full traces side by side.
 
-Loom fixes that by recording every model decision and tool call your agent
+Weft fixes that by recording every model decision and tool call your agent
 makes, then giving you three operations on top of the recording:
 
 - **Replay** a run deterministically — no real API calls, no real side
@@ -23,7 +23,7 @@ points, and diffs between them.
 
 ## Why
 
-Loom wraps two things any tool-calling agent loop already has: a model
+Weft wraps two things any tool-calling agent loop already has: a model
 client (something that turns history into a decision) and tool execution.
 Nothing about your agent's own control-flow code changes — only which
 client objects you hand it change, between a live run, a replay, and a
@@ -42,15 +42,15 @@ stdlib. `pytest` is only needed for running the test suite.
 
 ## Quickstart
 
-Loom works with any object that looks like a model client — a real LLM API
+Weft works with any object that looks like a model client — a real LLM API
 wrapper, or (as below) something fully scripted. The recording/replay/branch
 mechanism doesn't care which:
 
 ```python
-from loom.recording import begin_recording
-from loom.registry import ToolRegistry
-from loom.storage import Storage
-from loom.types import Decision, Step, Tool
+from weft.recording import begin_recording
+from weft.registry import ToolRegistry
+from weft.storage import Storage
+from weft.types import Decision, Step, Tool
 
 # Your own tools, in your own environment
 def read_file(path: str) -> str:
@@ -68,7 +68,7 @@ registry = ToolRegistry([
 # Your own model client — just needs a `.decide(task, history, tools) -> Decision` method
 model_client = my_model_client
 
-storage = Storage(".loom.db")
+storage = Storage(".weft.db")
 run_id, recording_client, recording_executor = begin_recording(
     storage, "fix the typo in greet.py", model_client, registry
 )
@@ -85,12 +85,12 @@ while True:
 ```
 
 That's it — every decision and tool call is now durably recorded in
-`.loom.db`.
+`.weft.db`.
 
 ### Replay
 
 ```python
-from loom.replay import ReplayModelClient, ReplayExecutor
+from weft.replay import ReplayModelClient, ReplayExecutor
 
 replay_client = ReplayModelClient(storage, run_id)
 replay_executor = ReplayExecutor(storage, run_id)
@@ -101,7 +101,7 @@ replay_executor = ReplayExecutor(storage, run_id)
 ### Branch
 
 ```python
-from loom.branch import branch
+from weft.branch import branch
 
 child_run_id, branch_client, branch_executor = branch(
     storage, run_id, from_step=1, real_client=model_client, registry=registry
@@ -113,7 +113,7 @@ child_run_id, branch_client, branch_executor = branch(
 ### Diff
 
 ```python
-from loom.diff import diff_runs
+from weft.diff import diff_runs
 
 result = diff_runs(storage, run_id, child_run_id)
 print(result.shared_prefix_length, result.divergence_index, result.divergence_reason)
@@ -122,18 +122,18 @@ print(result.shared_prefix_length, result.divergence_index, result.divergence_re
 ## CLI
 
 ```bash
-loom list                    # every recorded run, with fork relationships
-loom show <run_id>           # step-by-step history for one run
-loom diff <run_id_a> <run_id_b>
-loom serve                   # local web UI at http://127.0.0.1:8420
+weft list                    # every recorded run, with fork relationships
+weft show <run_id>           # step-by-step history for one run
+weft diff <run_id_a> <run_id_b>
+weft serve                   # local web UI at http://127.0.0.1:8420
 ```
 
-All four read from `.loom.db` in the current directory by default; pass
+All four read from `.weft.db` in the current directory by default; pass
 `--db <path>` to point at a different file.
 
 ## Web UI
 
-`loom serve` starts a local, stdlib-only web server with a timeline view of
+`weft serve` starts a local, stdlib-only web server with a timeline view of
 each run, its fork point relative to its parent (steps it replayed are
 dimmed, its own new steps aren't), and a two-run diff view — check two runs
 in the list and a "Compare" button appears, rendering both timelines side by
@@ -178,7 +178,7 @@ first index where either the decision (tool name + args) or the observation
 "took the same action, got a different result" from "one run is just longer
 than the other."
 
-Full design rationale: [`docs/superpowers/specs/2026-09-23-loom-agent-time-travel-debugger-design.md`](docs/superpowers/specs/2026-09-23-loom-agent-time-travel-debugger-design.md).
+Full design rationale: [`docs/superpowers/specs/2026-09-23-weft-agent-time-travel-debugger-design.md`](docs/superpowers/specs/2026-09-23-weft-agent-time-travel-debugger-design.md).
 
 ## Current limitations
 
@@ -196,11 +196,11 @@ This is a v1. Known gaps, roughly in order of how much they'll bite you:
   recording/replay/branch wrappers into your own loop directly. A LangGraph
   integration is the natural next step once the core mechanism has more
   mileage.
-- **Local, single-user tool, not a hosted service.** `loom serve` binds to
+- **Local, single-user tool, not a hosted service.** `weft serve` binds to
   `127.0.0.1` by default and doesn't check the `Host` header — don't expose
   it on an untrusted network.
 - **No redaction.** If your recorded args/observations contain secrets or
-  PII, they're in `.loom.db` in plaintext. Don't commit that file or share
+  PII, they're in `.weft.db` in plaintext. Don't commit that file or share
   it without checking what's in it first.
 
 ## License

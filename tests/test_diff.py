@@ -1,7 +1,7 @@
 from __future__ import annotations
-from loom.diff import diff_runs
-from loom.storage import Storage
-from loom.types import Observation, Step
+from weft.diff import diff_runs
+from weft.storage import Storage
+from weft.types import Observation, Step
 
 
 def make_run(storage, steps):

@@ -1,9 +1,9 @@
 from __future__ import annotations
 import pytest
-from loom.branch import InvalidForkPointError, branch
-from loom.registry import ToolRegistry
-from loom.storage import Storage
-from loom.types import Decision, Observation, Step, Tool
+from weft.branch import InvalidForkPointError, branch
+from weft.registry import ToolRegistry
+from weft.storage import Storage
+from weft.types import Decision, Observation, Step, Tool
 from tests.fakes import FakeModelClient
 
 

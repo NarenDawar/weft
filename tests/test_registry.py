@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pytest
-from loom.registry import ToolRegistry, UnknownToolError
-from loom.types import Tool
+from weft.registry import ToolRegistry, UnknownToolError
+from weft.types import Tool
 
 
 def make_registry():

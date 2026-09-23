@@ -1,5 +1,5 @@
 [project]
-name = "loom-agent-debugger"
+name = "weft-agent-debugger"
 version = "0.1.0"
 description = "Time-travel debugger for tool-calling agents: record, replay, branch, and diff agent runs"
 readme = "README.md"
@@ -16,10 +16,10 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["loom*"]
+include = ["weft*"]
 
 [tool.setuptools.package-data]
-"loom.web" = ["static/*"]
+"weft.web" = ["static/*"]
 
 [project.scripts]
-loom = "loom.cli:main"
+weft = "weft.cli:main"

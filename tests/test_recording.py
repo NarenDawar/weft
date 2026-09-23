@@ -1,8 +1,8 @@
 from __future__ import annotations
-from loom.recording import RecordingExecutor, RecordingModelClient, begin_recording
-from loom.registry import ToolRegistry
-from loom.storage import Storage
-from loom.types import Decision, Step, Tool
+from weft.recording import RecordingExecutor, RecordingModelClient, begin_recording
+from weft.registry import ToolRegistry
+from weft.storage import Storage
+from weft.types import Decision, Step, Tool
 from tests.fakes import FakeModelClient
 
 

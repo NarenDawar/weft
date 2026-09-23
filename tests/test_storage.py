@@ -2,8 +2,8 @@
 from __future__ import annotations
 import datetime
 import pytest
-from loom.storage import Storage, UnknownRunError
-from loom.types import Observation, Step
+from weft.storage import Storage, UnknownRunError
+from weft.types import Observation, Step
 
 
 def make_storage() -> Storage:

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from loom.model import ModelClient
-from loom.registry import ToolRegistry, UnknownToolError
-from loom.storage import Storage, now_iso
-from loom.types import Decision, HistoryEntry, Observation, Step
+from weft.model import ModelClient
+from weft.registry import ToolRegistry, UnknownToolError
+from weft.storage import Storage, now_iso
+from weft.types import Decision, HistoryEntry, Observation, Step
 
 
 class RecordingModelClient:

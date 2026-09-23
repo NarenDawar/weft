@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from loom.storage import Storage
+from weft.storage import Storage
 
 
 @dataclass(frozen=True)

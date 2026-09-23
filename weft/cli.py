@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 import sys
 
-from loom.diff import diff_runs
-from loom.storage import Storage
-from loom.web.server import serve
+from weft.diff import diff_runs
+from weft.storage import Storage
+from weft.web.server import serve
 
 
 def _open_storage(db_path: str) -> Storage:
@@ -60,7 +60,7 @@ def cmd_diff(args: argparse.Namespace) -> None:
 def cmd_serve(args: argparse.Namespace) -> None:
     storage = _open_storage(args.db)
     server = serve(storage, host=args.host, port=args.port)
-    print(f"Loom serving at http://{args.host}:{args.port} (Ctrl+C to stop)")
+    print(f"Weft serving at http://{args.host}:{args.port} (Ctrl+C to stop)")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -70,8 +70,8 @@ def cmd_serve(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="loom", description="Time-travel debugger for agents.")
-    parser.add_argument("--db", default=".loom.db", help="Path to the Loom SQLite database (default: .loom.db)")
+    parser = argparse.ArgumentParser(prog="weft", description="Time-travel debugger for agents.")
+    parser.add_argument("--db", default=".weft.db", help="Path to the Weft SQLite database (default: .weft.db)")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     list_parser = subparsers.add_parser("list", help="List all recorded runs")

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from loom.model import ModelClient
-from loom.recording import RecordingExecutor, RecordingModelClient
-from loom.registry import ToolRegistry
-from loom.replay import ReplayExecutor, ReplayModelClient
-from loom.storage import Storage
-from loom.types import Decision, Observation, Step
+from weft.model import ModelClient
+from weft.recording import RecordingExecutor, RecordingModelClient
+from weft.registry import ToolRegistry
+from weft.replay import ReplayExecutor, ReplayModelClient
+from weft.storage import Storage
+from weft.types import Decision, Observation, Step
 
 
 class InvalidForkPointError(Exception):

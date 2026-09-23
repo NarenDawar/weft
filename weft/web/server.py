@@ -5,8 +5,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from loom.diff import diff_runs
-from loom.storage import RunRecord, Storage
+from weft.diff import diff_runs
+from weft.storage import RunRecord, Storage
 
 STATIC_DIR = Path(__file__).parent / "static"
 

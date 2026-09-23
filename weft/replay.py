@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from loom.storage import Storage
-from loom.types import Decision, Observation, Step
+from weft.storage import Storage
+from weft.types import Decision, Observation, Step
 
 
 class ReplayExhaustedError(Exception):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pytest
-from loom.types import Decision
+from weft.types import Decision
 from tests.fakes import FakeModelClient, FailingModelClient
 
 

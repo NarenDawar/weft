@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from loom.types import Tool
+from weft.types import Tool
 
 
 class UnknownToolError(Exception):

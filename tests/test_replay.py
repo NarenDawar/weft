@@ -1,9 +1,9 @@
 # tests/test_replay.py
 from __future__ import annotations
 import pytest
-from loom.replay import ReplayExecutor, ReplayExhaustedError, ReplayModelClient
-from loom.storage import Storage
-from loom.types import Observation, Step
+from weft.replay import ReplayExecutor, ReplayExhaustedError, ReplayModelClient
+from weft.storage import Storage
+from weft.types import Observation, Step
 
 
 def make_storage_with_run(status="complete"):

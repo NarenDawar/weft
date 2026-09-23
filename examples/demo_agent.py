@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from loom.branch import branch
-from loom.diff import diff_runs
-from loom.recording import begin_recording
-from loom.registry import ToolRegistry
-from loom.replay import ReplayExecutor, ReplayModelClient
-from loom.storage import Storage
-from loom.types import Decision, Step, Tool
+from weft.branch import branch
+from weft.diff import diff_runs
+from weft.recording import begin_recording
+from weft.registry import ToolRegistry
+from weft.replay import ReplayExecutor, ReplayModelClient
+from weft.storage import Storage
+from weft.types import Decision, Step, Tool
 
 
 @dataclass
@@ -47,7 +47,7 @@ def make_tools(fs: FakeFilesystem) -> list[Tool]:
 
 
 class ScriptedClient:
-    """A fully scripted ModelClient standing in for a real model — Loom's
+    """A fully scripted ModelClient standing in for a real model — Weft's
     recording/replay/branch/diff mechanism doesn't care whether decisions
     come from a real API or a script, so this demo needs no API key."""
 
@@ -59,7 +59,7 @@ class ScriptedClient:
 
 
 def run_demo() -> None:
-    storage = Storage("demo.loom.db")
+    storage = Storage("demo.weft.db")
     fs = FakeFilesystem(files={"greet.py": "def greet():\n    return 'helo'\n"})
     registry = ToolRegistry(make_tools(fs))
     task = "fix the typo in greet.py"

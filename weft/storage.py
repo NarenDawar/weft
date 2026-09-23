@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
-from loom.types import HistoryEntry, Observation, Step
+from weft.types import HistoryEntry, Observation, Step
 
 
 class UnknownRunError(Exception):

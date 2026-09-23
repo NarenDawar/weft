@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from loom.types import Decision, HistoryEntry, Tool
+from weft.types import Decision, HistoryEntry, Tool
 
 
 class ModelClient(Protocol):
