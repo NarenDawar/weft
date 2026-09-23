@@ -23,7 +23,10 @@ async function loadTimeline(runId) {
   const response = await fetch(`/api/runs/${runId}`);
   const steps = await response.json();
   const container = document.getElementById("timeline");
-  container.innerHTML = `<h2>Run ${runId}</h2>`;
+  container.innerHTML = "";
+  const heading = document.createElement("h2");
+  heading.textContent = `Run ${runId}`;
+  container.appendChild(heading);
   const list = document.createElement("ol");
   steps.forEach((step) => {
     const item = document.createElement("li");
