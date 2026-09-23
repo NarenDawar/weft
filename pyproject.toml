@@ -14,3 +14,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["loom*"]
+
+[tool.setuptools.package-data]
+"loom.web" = ["static/*"]
+
+[project.scripts]
+loom = "loom.cli:main"
