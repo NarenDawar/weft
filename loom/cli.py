@@ -5,6 +5,7 @@ import sys
 
 from loom.diff import diff_runs
 from loom.storage import Storage
+from loom.web.server import serve
 
 
 def _open_storage(db_path: str) -> Storage:
@@ -56,6 +57,18 @@ def cmd_diff(args: argparse.Namespace) -> None:
         print("No divergence: runs are identical")
 
 
+def cmd_serve(args: argparse.Namespace) -> None:
+    storage = _open_storage(args.db)
+    server = serve(storage, host=args.host, port=args.port)
+    print(f"Loom serving at http://{args.host}:{args.port} (Ctrl+C to stop)")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.shutdown()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="loom", description="Time-travel debugger for agents.")
     parser.add_argument("--db", default=".loom.db", help="Path to the Loom SQLite database (default: .loom.db)")
@@ -72,6 +85,11 @@ def build_parser() -> argparse.ArgumentParser:
     diff_parser.add_argument("run_id_a")
     diff_parser.add_argument("run_id_b")
     diff_parser.set_defaults(func=cmd_diff)
+
+    serve_parser = subparsers.add_parser("serve", help="Start the local web UI")
+    serve_parser.add_argument("--host", default="127.0.0.1")
+    serve_parser.add_argument("--port", type=int, default=8420)
+    serve_parser.set_defaults(func=cmd_serve)
 
     return parser
 

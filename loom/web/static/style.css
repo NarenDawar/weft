@@ -1,0 +1,34 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 16px;
+  color: #222;
+}
+
+h1 {
+  font-size: 20px;
+}
+
+#runs ul, #timeline ol {
+  list-style: none;
+  padding: 0;
+}
+
+#runs li {
+  margin-bottom: 6px;
+}
+
+.step {
+  font-family: monospace;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-left: 3px solid #4a9;
+  margin-bottom: 4px;
+  background: #f7f7f7;
+}
+
+.step-error {
+  border-left-color: #e05252;
+  background: #fdf0f0;
+}
