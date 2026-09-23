@@ -24,7 +24,7 @@
 
 - Multi-level branching (a branch of a branch) must reconstruct full history correctly by recursively walking the fork chain, not just resolving one level — owned by Task 2 (`test_resolve_full_history_for_multi_level_branch`).
 - Replay must distinguish "genuinely done" (`status == "complete"`, returns `Decision(None)`) from "recording exhausted unexpectedly" (raises `ReplayExhaustedError`) — conflating them would hide real agent-code drift as if it were normal completion. Owned by Task 5 (`test_replay_model_client_returns_none_when_complete_and_exhausted`, `test_replay_model_client_raises_when_exhausted_and_not_complete`).
-- Branch boundary values — `from_step=0` (branch immediately, nothing replayed) and `from_step == len(parent_history)` (continue live exactly where the parent left off) — must both be valid, not off-by-one errors. Owned by Task 6 (`test_branch_at_step_zero_skips_replay_entirely`, `test_branch_at_step_equal_to_parent_length_continues_live_immediately`).
+- Branch boundary values — `from_step=0` (branch immediately, nothing replayed) and `from_step == len(parent_history)` (replay everything the parent had, then go live with nothing left to replay) — must both be valid, not off-by-one errors. Owned by Task 6 (`test_branch_at_step_zero_skips_replay_entirely`, `test_branch_at_step_equal_to_parent_length_replays_everything_then_goes_live`).
 - A tool that raises a real exception during recording must be captured as `Observation(is_error=True)`, not crash the recording session. Owned by Task 4 (`test_recording_executor_captures_tool_exception_as_error_observation`).
 - Diffing two runs where one is a genuine prefix of the other (no divergence within the shared steps, only a length difference) must be reported distinctly from a decision/observation divergence. Owned by Task 7 (`test_diff_reports_length_difference_when_one_run_is_shorter`).
 
@@ -1059,7 +1059,12 @@ def test_branch_at_step_zero_skips_replay_entirely():
     assert real_client.calls == 1
 
 
-def test_branch_at_step_equal_to_parent_length_continues_live_immediately():
+def test_branch_at_step_equal_to_parent_length_replays_everything_then_goes_live():
+    # from_step=N replays indices 0..N-1, then goes live at index N. With a
+    # 1-step parent and from_step=1, that means: replay that one step first
+    # (index 0 < fork_step 1), THEN go live (index 1 is no longer < fork_step
+    # 1) — not skip replay entirely. from_step=0 (the previous test) is the
+    # only value that skips replay outright.
     storage = Storage(":memory:")
     parent_id = storage.create_run("task")
     storage.append_step(parent_id, 0, Step("read_file", {"path": "a.py"}), Observation("x"), "t0", "t1")
@@ -1070,8 +1075,14 @@ def test_branch_at_step_equal_to_parent_length_continues_live_immediately():
         storage, parent_id, from_step=1, real_client=real_client, registry=make_registry()
     )
 
-    decision = model_client.decide("task", [], [])
-    assert decision.tool_name is None
+    d0 = model_client.decide("task", [], [])
+    assert d0.tool_name == "read_file"
+    assert real_client.calls == 0
+    obs0 = executor.execute(Step(d0.tool_name, d0.args))
+    assert obs0 == Observation("x", False)
+
+    d1 = model_client.decide("task", [], [])
+    assert d1.tool_name is None
     assert real_client.calls == 1
 ```
 
