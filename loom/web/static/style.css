@@ -32,3 +32,55 @@ h1 {
   border-left-color: #e05252;
   background: #fdf0f0;
 }
+
+.step-inherited {
+  opacity: 0.55;
+}
+
+.step-diverged {
+  border-left-color: #e0a030;
+  background: #fdf6e8;
+}
+
+.fork-note {
+  font-size: 13px;
+  color: #666;
+  margin: 2px 0 8px 0;
+}
+
+#compare-button {
+  display: block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #4a9;
+  border-radius: 4px;
+  background: #eefaf3;
+  cursor: pointer;
+}
+
+#compare-button:hover {
+  background: #dcf3e6;
+}
+
+.diff-summary {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 12px;
+}
+
+.diff-columns {
+  display: flex;
+  gap: 16px;
+}
+
+.diff-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.diff-column h3 {
+  font-size: 14px;
+  margin-bottom: 6px;
+  word-break: break-all;
+}
