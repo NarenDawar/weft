@@ -63,6 +63,19 @@ def test_recording_executor_captures_tool_exception_as_error_observation():
     assert logged[0].observation.is_error is True
 
 
+def test_recording_executor_captures_unknown_tool_as_error_observation():
+    storage = Storage(":memory:")
+    run_id = storage.create_run("task")
+    executor = RecordingExecutor(make_registry(), storage, run_id)
+    obs = executor.execute(Step("nonexistent_tool", {}))
+    assert obs.is_error is True
+    assert "nonexistent_tool" in obs.result
+    logged = storage.get_own_steps(run_id)
+    assert len(logged) == 1
+    assert logged[0].observation.is_error is True
+    assert logged[0].step == Step("nonexistent_tool", {})
+
+
 def test_recording_executor_respects_start_index_for_branching():
     storage = Storage(":memory:")
     run_id = storage.create_run("task")

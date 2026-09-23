@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from loom.model import ModelClient
-from loom.registry import ToolRegistry
+from loom.registry import ToolRegistry, UnknownToolError
 from loom.storage import Storage, now_iso
 from loom.types import Decision, HistoryEntry, Observation, Step
 
@@ -28,10 +28,12 @@ class RecordingExecutor:
 
     def execute(self, step: Step) -> Observation:
         decided_at = now_iso()
-        tool = self.registry.get(step.tool_name)
         try:
+            tool = self.registry.get(step.tool_name)
             result = tool.fn(**step.args)
             observation = Observation(result=result, is_error=False)
+        except UnknownToolError:
+            observation = Observation(result=f"Unknown tool: {step.tool_name}", is_error=True)
         except Exception as exc:
             observation = Observation(result=str(exc), is_error=True)
         executed_at = now_iso()
