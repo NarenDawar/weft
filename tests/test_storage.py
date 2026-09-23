@@ -1,5 +1,6 @@
 # tests/test_storage.py
 from __future__ import annotations
+import datetime
 import pytest
 from loom.storage import Storage, UnknownRunError
 from loom.types import Observation, Step
@@ -30,6 +31,18 @@ def test_append_step_and_get_own_steps_round_trip():
     assert len(entries) == 1
     assert entries[0].step == Step("read_file", {"path": "a.py"})
     assert entries[0].observation == Observation("hello", False)
+
+
+def test_append_step_with_non_json_native_result_does_not_raise():
+    storage = make_storage()
+    run_id = storage.create_run("do the task")
+    non_native_result = datetime.datetime(2024, 1, 1, 12, 30)
+    storage.append_step(
+        run_id, 0, Step("read_file", {"path": "a.py"}), Observation(non_native_result, False), "t0", "t1"
+    )
+    entries = storage.get_own_steps(run_id)
+    assert len(entries) == 1
+    assert entries[0].observation.result == repr(non_native_result)
 
 
 def test_get_run_raises_for_unknown_run():

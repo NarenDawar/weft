@@ -97,6 +97,13 @@ class Storage:
         decided_at: str,
         executed_at: str,
     ) -> None:
+        # By the time this is called, the tool's real-world side effect has already
+        # happened (see RecordingExecutor.execute), so serialization must not raise
+        # and drop the record. `default=repr` falls back to repr() for any value
+        # json can't natively serialize (datetime, bytes, custom objects, etc.).
+        # Accepted limitation: such values are stored as their repr() string and
+        # won't round-trip to their original type on replay (e.g. a tuple becomes
+        # a string, not a list).
         self.conn.execute(
             "INSERT INTO steps (run_id, step_index, tool_name, args_json, observation_json, "
             "is_error, decided_at, executed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -104,8 +111,8 @@ class Storage:
                 run_id,
                 step_index,
                 step.tool_name,
-                json.dumps(step.args),
-                json.dumps(observation.result),
+                json.dumps(step.args, default=repr),
+                json.dumps(observation.result, default=repr),
                 1 if observation.is_error else 0,
                 decided_at,
                 executed_at,
