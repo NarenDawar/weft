@@ -2,6 +2,9 @@
 name = "loom-agent-debugger"
 version = "0.1.0"
 description = "Time-travel debugger for tool-calling agents: record, replay, branch, and diff agent runs"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Naren Dawar" }]
 requires-python = ">=3.10"
 dependencies = []
 
